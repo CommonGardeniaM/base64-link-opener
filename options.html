@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <title>Base64 Link Opener Settings</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="options.css">
+  </head>
+  <body>
+    <main class="container">
+      <header>
+        <h1>Base64 Link Opener の設定</h1>
+        <p>decode の安全性と挙動を調整できます。</p>
+      </header>
+
+      <form id="settingsForm" class="card">
+        <label class="row checkbox">
+          <input type="checkbox" id="autoOpenSafeUrl">
+          <span>安全なURLが1件だけ見つかったら自動で開く</span>
+        </label>
+
+        <label class="row checkbox">
+          <input type="checkbox" id="openInBackground">
+          <span>新しいタブをバックグラウンドで開く</span>
+        </label>
+
+        <label class="row checkbox">
+          <input type="checkbox" id="tryUrlDecodeBeforeBase64">
+          <span>% エンコードされた文字列も追加で試す</span>
+        </label>
+
+        <label class="row checkbox">
+          <input type="checkbox" id="inspectUrlContainers">
+          <span>URLパラメータやJSON内の候補も調べる</span>
+        </label>
+
+        <label class="row">
+          <span>最大 decode 回数</span>
+          <input type="number" id="maxDecodePasses" min="1" max="5" step="1">
+        </label>
+
+        <fieldset class="fieldset">
+          <legend>許可するscheme</legend>
+          <label class="checkbox"><input type="checkbox" id="allowHttp"> <span>http:</span></label>
+          <label class="checkbox"><input type="checkbox" id="allowHttps"> <span>https:</span></label>
+          <label class="checkbox"><input type="checkbox" id="allowMagnet"> <span>magnet:</span></label>
+        </fieldset>
+
+        <div class="actions">
+          <button type="submit" class="primary">保存</button>
+          <button type="button" id="resetButton">初期値に戻す</button>
+          <span id="status" class="status"></span>
+        </div>
+      </form>
+    </main>
+
+    <script src="options.js"></script>
+  </body>
+</html>

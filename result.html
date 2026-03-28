@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <title>Base64 Link Opener</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="result.css">
+  </head>
+  <body>
+    <main class="container">
+      <header class="header">
+        <div>
+          <h1>Base64 Link Opener</h1>
+          <p class="subtitle">選択文字列の decode 結果</p>
+        </div>
+        <button id="settingsButton" type="button" class="ghost">設定</button>
+      </header>
+
+      <section class="card">
+        <div class="status-row">
+          <span id="statusBadge" class="badge">確認中</span>
+          <span id="createdAt" class="muted"></span>
+        </div>
+        <p id="message" class="message"></p>
+      </section>
+
+      <section class="grid two-up">
+        <section class="card">
+          <h2>元の文字列</h2>
+          <pre id="rawSelection" class="code"></pre>
+        </section>
+
+        <section class="card">
+          <h2>選ばれた候補</h2>
+          <pre id="chosenCandidate" class="code empty">候補なし</pre>
+        </section>
+      </section>
+
+      <section class="card">
+        <h2>decode 結果</h2>
+        <pre id="decodedText" class="code empty">decode結果はありません。</pre>
+      </section>
+
+      <section class="grid two-up">
+        <section class="card">
+          <div class="section-heading">
+            <h2>安全なURL</h2>
+            <span id="safeCount" class="pill">0</span>
+          </div>
+          <div id="safeUrlEmpty" class="empty-note">安全に開けるURLは見つかりませんでした。</div>
+          <ul id="safeUrlList" class="url-list"></ul>
+          <div class="actions">
+            <button id="openFirstButton" type="button" class="primary" hidden>最初のURLを開く</button>
+            <button id="openAllButton" type="button" hidden>すべて開く</button>
+            <button id="copyFirstButton" type="button" hidden>最初のURLをコピー</button>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="section-heading">
+            <h2>ブロックしたURL</h2>
+            <span id="blockedCount" class="pill muted-pill">0</span>
+          </div>
+          <div id="blockedEmpty" class="empty-note">危険なschemeのURLは見つかりませんでした。</div>
+          <ul id="blockedUrlList" class="url-list blocked"></ul>
+        </section>
+      </section>
+
+      <section class="card">
+        <h2>候補ごとの試行結果</h2>
+        <div id="candidateAttempts" class="candidate-attempts"></div>
+      </section>
+    </main>
+
+    <script src="result.js"></script>
+  </body>
+</html>
