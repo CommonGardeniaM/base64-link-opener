@@ -1,0 +1,47 @@
+name: Create Release with Extension ZIP
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'manifest.json'
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get version from manifest.json
+        id: version
+        run: |
+          VERSION=$(grep -o '"version": "[^"]*"' manifest.json | cut -d'"' -f4)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=v$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Create extension ZIP
+        run: |
+          mkdir -p build
+          zip -r build/base64-link-opener.zip \
+            manifest.json \
+            service_worker.js \
+            options.html \
+            options.js \
+            options.css \
+            result.html \
+            result.js \
+            result.css \
+            icon/
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          files: build/base64-link-opener.zip
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
