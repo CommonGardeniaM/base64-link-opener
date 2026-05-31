@@ -1,6 +1,7 @@
 name: Create Release with Extension ZIP
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
