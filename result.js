@@ -221,6 +221,28 @@ function renderCandidateAttempts(attempts) {
       code.textContent = entry.decodedText || entry.input || "結果なし";
       li.appendChild(code);
 
+      const passUrls = (attempt.safeUrls || []).filter((urlEntry) => urlEntry.sourcePass === entry.pass);
+      if (passUrls.length > 0) {
+        const actions = document.createElement("div");
+        actions.className = "actions";
+
+        for (const [index, urlEntry] of passUrls.entries()) {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "primary";
+          button.textContent = passUrls.length === 1
+            ? "このURLを開く"
+            : `${urlEntry.host || `URL ${index + 1}`} を開く`;
+          button.title = urlEntry.url;
+          button.addEventListener("click", () => {
+            chrome.tabs.create({ url: urlEntry.url });
+          });
+          actions.appendChild(button);
+        }
+
+        li.appendChild(actions);
+      }
+
       passList.appendChild(li);
     }
 
