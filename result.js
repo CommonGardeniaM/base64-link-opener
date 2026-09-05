@@ -16,6 +16,7 @@ const openFirstButton = document.getElementById("openFirstButton");
 const openAllButton = document.getElementById("openAllButton");
 const copyFirstButton = document.getElementById("copyFirstButton");
 const candidateAttemptsEl = document.getElementById("candidateAttempts");
+const openCandidateUrlsButton = document.getElementById("openCandidateUrlsButton");
 const settingsButton = document.getElementById("settingsButton");
 
 init().catch((error) => {
@@ -133,11 +134,7 @@ function renderSafeUrls(urls) {
   openAllButton.hidden = urls.length <= 1;
 
   openFirstButton.onclick = urls.length > 0 ? () => chrome.tabs.create({ url: urls[0].url }) : null;
-  openAllButton.onclick = urls.length > 1 ? async () => {
-    for (const entry of urls) {
-      await chrome.tabs.create({ url: entry.url });
-    }
-  } : null;
+  openAllButton.onclick = urls.length > 1 ? () => openUrls(urls) : null;
   copyFirstButton.onclick = urls.length > 0 ? () => copyWithFeedback(copyFirstButton, urls[0].url, "最初のURLをコピー") : null;
 }
 
@@ -166,6 +163,10 @@ function renderBlockedUrls(urls) {
 
 function renderCandidateAttempts(attempts) {
   candidateAttemptsEl.textContent = "";
+
+  const candidateUrls = collectCandidateSafeUrls(attempts);
+  openCandidateUrlsButton.hidden = candidateUrls.length <= 1;
+  openCandidateUrlsButton.onclick = candidateUrls.length > 1 ? () => openUrls(candidateUrls) : null;
 
   if (!Array.isArray(attempts) || attempts.length === 0) {
     candidateAttemptsEl.textContent = "候補の試行履歴はありません。";
@@ -248,6 +249,35 @@ function renderCandidateAttempts(attempts) {
 
     card.appendChild(passList);
     candidateAttemptsEl.appendChild(card);
+  }
+}
+
+function collectCandidateSafeUrls(attempts) {
+  if (!Array.isArray(attempts)) {
+    return [];
+  }
+
+  const unique = [];
+  const seen = new Set();
+
+  for (const attempt of attempts) {
+    for (const entry of attempt.safeUrls || []) {
+      if (!entry?.url || seen.has(entry.url)) {
+        continue;
+      }
+      seen.add(entry.url);
+      unique.push(entry);
+    }
+  }
+
+  return unique;
+}
+
+async function openUrls(urls) {
+  for (const entry of urls) {
+    if (entry?.url) {
+      await chrome.tabs.create({ url: entry.url });
+    }
   }
 }
 
