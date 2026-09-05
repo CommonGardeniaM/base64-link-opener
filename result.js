@@ -166,6 +166,9 @@ function renderCandidateAttempts(attempts) {
 
   const candidateUrls = collectCandidateSafeUrls(attempts);
   openCandidateUrlsButton.hidden = candidateUrls.length <= 1;
+  openCandidateUrlsButton.textContent = candidateUrls.length > 1
+    ? `検出URLをまとめて開く (${candidateUrls.length})`
+    : "検出URLをまとめて開く";
   openCandidateUrlsButton.onclick = candidateUrls.length > 1 ? () => openUrls(candidateUrls) : null;
 
   if (!Array.isArray(attempts) || attempts.length === 0) {
@@ -231,9 +234,13 @@ function renderCandidateAttempts(attempts) {
           const button = document.createElement("button");
           button.type = "button";
           button.className = "primary";
-          button.textContent = passUrls.length === 1
-            ? "このURLを開く"
-            : `${urlEntry.host || `URL ${index + 1}`} を開く`;
+          if (passUrls.length === 1) {
+            button.textContent = "このURLを開く";
+          } else if (urlEntry.host) {
+            button.textContent = `${urlEntry.host} (${index + 1}) を開く`;
+          } else {
+            button.textContent = `URL ${index + 1} を開く`;
+          }
           button.title = urlEntry.url;
           button.addEventListener("click", () => {
             chrome.tabs.create({ url: urlEntry.url });
@@ -259,8 +266,9 @@ function collectCandidateSafeUrls(attempts) {
 
   const unique = [];
   const seen = new Set();
+  const sorted = [...attempts].sort((a, b) => (b.score || 0) - (a.score || 0));
 
-  for (const attempt of attempts) {
+  for (const attempt of sorted) {
     for (const entry of attempt.safeUrls || []) {
       if (!entry?.url || seen.has(entry.url)) {
         continue;
@@ -274,10 +282,22 @@ function collectCandidateSafeUrls(attempts) {
 }
 
 async function openUrls(urls) {
+  const failures = [];
+
   for (const entry of urls) {
-    if (entry?.url) {
-      await chrome.tabs.create({ url: entry.url });
+    if (!entry?.url) {
+      continue;
     }
+
+    try {
+      await chrome.tabs.create({ url: entry.url });
+    } catch (error) {
+      failures.push({ url: entry.url, error });
+    }
+  }
+
+  if (failures.length > 0) {
+    console.warn("Failed to open some URLs:", failures);
   }
 }
 
