@@ -16,6 +16,7 @@ const openFirstButton = document.getElementById("openFirstButton");
 const openAllButton = document.getElementById("openAllButton");
 const copyFirstButton = document.getElementById("copyFirstButton");
 const candidateAttemptsEl = document.getElementById("candidateAttempts");
+const openCandidateUrlsButton = document.getElementById("openCandidateUrlsButton");
 const settingsButton = document.getElementById("settingsButton");
 
 init().catch((error) => {
@@ -133,11 +134,7 @@ function renderSafeUrls(urls) {
   openAllButton.hidden = urls.length <= 1;
 
   openFirstButton.onclick = urls.length > 0 ? () => chrome.tabs.create({ url: urls[0].url }) : null;
-  openAllButton.onclick = urls.length > 1 ? async () => {
-    for (const entry of urls) {
-      await chrome.tabs.create({ url: entry.url });
-    }
-  } : null;
+  openAllButton.onclick = urls.length > 1 ? () => openUrls(urls) : null;
   copyFirstButton.onclick = urls.length > 0 ? () => copyWithFeedback(copyFirstButton, urls[0].url, "最初のURLをコピー") : null;
 }
 
@@ -166,6 +163,13 @@ function renderBlockedUrls(urls) {
 
 function renderCandidateAttempts(attempts) {
   candidateAttemptsEl.textContent = "";
+
+  const candidateUrls = collectCandidateSafeUrls(attempts);
+  openCandidateUrlsButton.hidden = candidateUrls.length <= 1;
+  openCandidateUrlsButton.textContent = candidateUrls.length > 1
+    ? `検出URLをまとめて開く (${candidateUrls.length})`
+    : "検出URLをまとめて開く";
+  openCandidateUrlsButton.onclick = candidateUrls.length > 1 ? () => openUrls(candidateUrls) : null;
 
   if (!Array.isArray(attempts) || attempts.length === 0) {
     candidateAttemptsEl.textContent = "候補の試行履歴はありません。";
@@ -221,11 +225,79 @@ function renderCandidateAttempts(attempts) {
       code.textContent = entry.decodedText || entry.input || "結果なし";
       li.appendChild(code);
 
+      const passUrls = (attempt.safeUrls || []).filter((urlEntry) => urlEntry.sourcePass === entry.pass);
+      if (passUrls.length > 0) {
+        const actions = document.createElement("div");
+        actions.className = "actions";
+
+        for (const [index, urlEntry] of passUrls.entries()) {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "primary";
+          if (passUrls.length === 1) {
+            button.textContent = "このURLを開く";
+          } else if (urlEntry.host) {
+            button.textContent = `${urlEntry.host} (${index + 1}) を開く`;
+          } else {
+            button.textContent = `URL ${index + 1} を開く`;
+          }
+          button.title = urlEntry.url;
+          button.addEventListener("click", () => {
+            chrome.tabs.create({ url: urlEntry.url });
+          });
+          actions.appendChild(button);
+        }
+
+        li.appendChild(actions);
+      }
+
       passList.appendChild(li);
     }
 
     card.appendChild(passList);
     candidateAttemptsEl.appendChild(card);
+  }
+}
+
+function collectCandidateSafeUrls(attempts) {
+  if (!Array.isArray(attempts)) {
+    return [];
+  }
+
+  const unique = [];
+  const seen = new Set();
+  const sorted = [...attempts].sort((a, b) => (b.score || 0) - (a.score || 0));
+
+  for (const attempt of sorted) {
+    for (const entry of attempt.safeUrls || []) {
+      if (!entry?.url || seen.has(entry.url)) {
+        continue;
+      }
+      seen.add(entry.url);
+      unique.push(entry);
+    }
+  }
+
+  return unique;
+}
+
+async function openUrls(urls) {
+  const failures = [];
+
+  for (const entry of urls) {
+    if (!entry?.url) {
+      continue;
+    }
+
+    try {
+      await chrome.tabs.create({ url: entry.url });
+    } catch (error) {
+      failures.push({ url: entry.url, error });
+    }
+  }
+
+  if (failures.length > 0) {
+    console.warn("Failed to open some URLs:", failures);
   }
 }
 
