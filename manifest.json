@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Base64 Link Opener",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "選択したBase64 / Base64URL文字列をdecodeし、安全なURLを抽出して開くか確認できるChrome拡張です。",
   "permissions": [
     "contextMenus",
